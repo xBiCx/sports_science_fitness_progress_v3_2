@@ -1,6 +1,9 @@
 /* Sports Science Fitness Club API Client */
 (() => {
-  const API_BASE = 'http://localhost:5050/api';
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const API_BASE = isLocalhost && window.location.port !== '5050' && window.location.port !== ''
+    ? 'http://localhost:5050/api'
+    : '/api';
 
   function getToken() {
     return localStorage.getItem('ssf_token') || '';

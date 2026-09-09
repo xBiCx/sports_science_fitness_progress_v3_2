@@ -28,18 +28,21 @@ app.get('/api/ping', (req, res) => {
   res.json({ message: 'Sports Science Fitness Club API is running', timestamp: new Date() });
 });
 
-// Start Express Server
-app.listen(PORT, async () => {
-  console.log(`=================================================`);
-  console.log(`🚀 SSF Backend API running on http://localhost:${PORT}`);
-  console.log(`=================================================`);
+// Start Express Server only in non-Vercel environment
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.listen(PORT, async () => {
+    console.log(`=================================================`);
+    console.log(`🚀 SSF Backend API running on http://localhost:${PORT}`);
+    console.log(`=================================================`);
 
-  try {
-    const client = await pool.connect();
-    console.log('✅ PostgreSQL Connected successfully to database:', process.env.DB_NAME || 'ssf_db');
-    client.release();
-  } catch (err) {
-    console.error('⚠️ PostgreSQL Connection Error:', err.message);
-    console.error('👉 Please make sure PostgreSQL is running and database "ssf_db" is created.');
-  }
-});
+    try {
+      const client = await pool.connect();
+      console.log('✅ PostgreSQL Connected successfully to database:', process.env.DB_NAME || 'ssf_db');
+      client.release();
+    } catch (err) {
+      console.error('⚠️ PostgreSQL Connection Error:', err.message);
+    }
+  });
+}
+
+module.exports = app;
