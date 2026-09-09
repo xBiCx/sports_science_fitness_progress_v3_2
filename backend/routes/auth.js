@@ -181,7 +181,7 @@ router.post('/google', async (req, res) => {
     });
   } catch (err) {
     console.error('Google Auth error:', err);
-    res.status(400).json({ error: 'ไม่สามารถยืนยันตัวตนด้วย Google ได้' });
+    res.status(400).json({ error: err.message || 'ไม่สามารถยืนยันตัวตนด้วย Google ได้' });
   }
 });
 

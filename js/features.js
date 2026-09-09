@@ -261,28 +261,40 @@
                 }
 
                 try {
-                  // Fetch User Info from Google OAuth API
-                  const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-                  });
-                  const profile = await userRes.json();
+                  let profile = null;
+                  let credential = tokenResponse.id_token || null;
 
+                  // 1. Try fetching user info if access_token is present
+                  if (tokenResponse.access_token) {
+                    try {
+                      const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                      });
+                      if (userRes.ok) {
+                        profile = await userRes.json();
+                      }
+                    } catch (fetchErr) {
+                      console.warn('Google userinfo fetch fallback:', fetchErr);
+                    }
+                  }
+
+                  // 2. Send to Backend API
                   if (window.SSFAPI) {
-                    const res = await window.SSFAPI.googleLogin(null, false, profile);
+                    const res = await window.SSFAPI.googleLogin(credential, false, profile);
                     window.SSFAPI.setToken(res.token);
                     localStorage.setItem('sportsScienceCurrentUser', JSON.stringify(res.user));
                     localStorage.setItem('ssf_current_user', JSON.stringify(res.user));
                   } else {
-                    completeGoogleLogin(profile);
+                    completeGoogleLogin(profile || { name: 'สมาชิก Google', email: 'google.member@sportscience.local' });
                   }
 
-                  setGoogleStatus(status, 'success', 'เข้าสู่ระบบด้วย Google สำเร็จ ยินดีต้อนรับ ' + (profile.name || '') + ' กำลังไปกรอกข้อมูลสุขภาพ...');
+                  setGoogleStatus(status, 'success', 'เข้าสู่ระบบด้วย Google สำเร็จ กำลังไปกรอกข้อมูลสุขภาพ...');
                   window.setTimeout(() => { window.location.href = 'health-profile.html?welcome=google'; }, 600);
                 } catch (err) {
                   button.disabled = false;
                   button.removeAttribute('aria-busy');
                   button.innerHTML = '<span class="google-mark">G</span>เข้าสู่ระบบด้วย Google';
-                  setGoogleStatus(status, 'error', 'ไม่สามารถเชื่อมต่อโปรไฟล์ Google ได้: ' + err.message);
+                  setGoogleStatus(status, 'error', err.message || 'ไม่สามารถยืนยันตัวตนด้วย Google บนเซิร์ฟเวอร์ได้');
                 }
               }
             });
